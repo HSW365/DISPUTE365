@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DISPUTE365 — Credit Repair Built On Federal Law</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0a0f;
+    --bg-raised: #121219;
+    --bg-card: #15151d;
+    --line: #232330;
+    --ink: #f2f2f5;
+    --ink-dim: #8d8d9c;
+    --red: #ff3b3b;
+    --cyan: #00e5ff;
+    --purple: #9d5cff;
+    --yellow: #ffd23f;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,h4{
+    font-family:'Barlow Condensed', sans-serif;
+    font-weight:700;
+    letter-spacing:0.01em;
+    text-transform:uppercase;
+    line-height:1.04;
+  }
+  .mono{font-family:'Space Mono', monospace;}
+  a{color:inherit; text-decoration:none;}
+  img{max-width:100%;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px;}
+  ::selection{background:var(--red); color:#fff;}
+  :focus-visible{outline:2px solid var(--cyan); outline-offset:3px;}
+
+  /* NAV */
+  nav{
+    position:fixed; top:0; left:0; right:0; z-index:50;
+    background:rgba(10,10,15,0.85); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  nav .wrap{display:flex; align-items:center; justify-content:space-between; height:68px;}
+  .logo{font-family:'Barlow Condensed'; font-weight:800; font-size:22px; letter-spacing:0.02em;}
+  .logo span{color:var(--red);}
+  .nav-links{display:flex; gap:32px; font-size:14px; color:var(--ink-dim);}
+  .nav-links a:hover{color:var(--ink);}
+  .nav-cta{
+    background:var(--red); color:#fff; padding:10px 20px; border-radius:3px;
+    font-size:13px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+  }
+  @media (max-width:760px){ .nav-links{display:none;} }
+
+  /* HERO */
+  .hero{
+    position:relative; padding:160px 0 100px;
+    background:
+      radial-gradient(ellipse 700px 400px at 85% -10%, rgba(255,59,59,0.16), transparent 60%),
+      radial-gradient(ellipse 600px 500px at 0% 30%, rgba(0,229,255,0.08), transparent 60%);
+    border-bottom:1px solid var(--line);
+    overflow:hidden;
+  }
+  .hero .wrap{display:grid; grid-template-columns:1.1fr 0.9fr; gap:60px; align-items:center;}
+  @media (max-width:900px){ .hero .wrap{grid-template-columns:1fr;} }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'Space Mono'; font-size:12px; color:var(--cyan);
+    border:1px solid rgba(0,229,255,0.3); border-radius:99px;
+    padding:6px 14px; margin-bottom:28px;
+  }
+  .eyebrow::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--cyan); box-shadow:0 0 8px var(--cyan);}
+  .hero h1{font-size:clamp(40px,6vw,68px); margin-bottom:24px;}
+  .hero h1 .strike{position:relative; color:var(--ink-dim);}
+  .hero h1 .strike::after{
+    content:''; position:absolute; left:-2%; right:-2%; top:50%; height:5px;
+    background:var(--red); transform:rotate(-2deg);
+  }
+  .hero p.lede{font-size:18
