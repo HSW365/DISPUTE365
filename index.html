@@ -160,6 +160,17 @@ td select{padding:7px 28px 7px 9px;font-size:13px}
 footer{border-top:1px solid var(--line);padding:40px 0;color:var(--mut);font-size:13px}
 footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 /* modal */
+/* one-shot join card */
+.join{background:linear-gradient(180deg,#15151f,#0f0f17);border:1px solid var(--line2);border-radius:14px;padding:24px;box-shadow:0 40px 90px -40px rgba(0,0,0,.9),0 0 0 1px rgba(34,211,238,.10) inset;position:relative}
+.join h3{font:800 34px/1 "Barlow Condensed";text-transform:uppercase}
+.join h3 b{color:var(--cy)}
+.join .stack{display:flex;flex-direction:column;gap:11px;margin-top:16px}
+.join .tabs button{padding:11px 6px}
+.join .tabs button small{display:block;font:700 10px "Space Mono";letter-spacing:.06em;opacity:.8;margin-top:3px}
+.join .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:420px){.join .two{grid-template-columns:1fr}}
+.join .alt{font-size:13px;color:var(--mut);text-align:center}.join .alt a{color:var(--tx)}
+.hidden{display:none!important}
 .mod{position:fixed;inset:0;background:rgba(5,5,9,.78);backdrop-filter:blur(6px);z-index:60;display:none;align-items:center;justify-content:center;padding:18px}
 .mod.on{display:flex}
 .mc{background:var(--card);border:1px solid var(--line2);border-radius:14px;padding:28px;width:100%;max-width:460px;max-height:92vh;overflow:auto;position:relative}
@@ -212,11 +223,30 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
       <p class="lede">Upload your Experian, TransUnion or Equifax report. DISPUTE365 pulls out every collection, charge-off, late payment, obsolete item and hard inquiry, then writes the dispute letters that cite the law. You mail them. You keep control.</p>
       <div class="hcta">
         <a href="#app" class="btn btn-p">Scan my report free</a>
-        <a href="#plans" class="btn btn-g">Plans from $9.99/mo</a>
+        <a href="#join" class="btn btn-g" data-join="pro">Plans from $9.99/mo</a>
       </div>
       <div class="trust"><span>Report never leaves your device</span><span>FCRA + FDCPA cited</span><span>Cancel anytime</span></div>
     </div>
-    <div class="scan" aria-hidden="true">
+    <div class="join" id="join">
+      <div class="eyebrow">Start in one step</div>
+      <h3 style="margin-top:8px">Join DISPUTE<b>365</b></h3>
+      <div class="stack">
+        <div class="tabs" id="jPlan"><button data-j="free">Free<small>scan</small></button><button data-j="basic">Basic<small>$9.99/mo</small></button><button data-j="pro" class="on">Pro<small>$14.99/mo</small></button></div>
+        <div class="two">
+          <div><label class="f">Email</label><input id="jEmail" type="email" autocomplete="email" placeholder="you@email.com"></div>
+          <div><label class="f">Password</label><input id="jPass" type="password" autocomplete="new-password" placeholder="8+ characters"></div>
+        </div>
+        <div id="jPayBox">
+          <div class="tabs" id="jMethod"><button data-m="cashapp" class="on">CashApp</button><button data-m="zelle">Zelle</button><button data-m="card" class="hidden" id="jCardTab">Card</button></div>
+          <div class="pay" id="jPayInfo" style="margin-top:10px"></div>
+          <div id="jRefWrap" style="margin-top:10px"><label class="f" id="jRefLbl">Your $cashtag</label><input id="jRef" placeholder="$yourcashtag"></div>
+        </div>
+        <div class="err" id="jErr"></div>
+        <button class="btn btn-p" id="jGo">Create account &amp; unlock Pro</button>
+        <div class="alt">Already a member? <a href="#" id="jSignIn">Sign in</a></div>
+      </div>
+    </div>
+    <div class="scan hidden" id="heroScan" aria-hidden="true">
       <div class="sline"></div>
       <div class="bar"><span>SCAN // <b>TRANSUNION_2026.PDF</b></span><span>14 PAGES</span></div>
       <div class="row"><div><div class="n">MIDLAND CREDIT MGMT</div><div class="m">ACCT ****4471 · $1,284</div></div><span class="tag t-col">Collection</span></div>
@@ -588,10 +618,11 @@ $("#aGo").onclick=async()=>{
 $("#aReset").onclick=async()=>{const email=$("#aEmail").value.trim();if(!email)return $("#aErr").textContent="Enter your email first.";const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});$("#aErr").innerHTML=error?esc(error.message):'<span class="ok">Reset link sent.</span>'};
 async function signOut(){await sb.auth.signOut();toast("Signed out")}
 let afterAuth=null;
-const needAuth=fn=>{if(session)return fn();afterAuth=fn;open("#mAuth")};
+const needAuth=fn=>{if(session)return fn();afterAuth=fn;showJoin()};
 sb.auth.onAuthStateChange((_e,s)=>{session=s;refresh()});
 
 async function refresh(){
+  $("#join").classList.toggle("hidden",!!session);$("#heroScan").classList.toggle("hidden",!session);
   if(!session){member=null;$("#navAuth").textContent="Sign in";$("#navAcct").innerHTML="";renderItems();renderTracker();return}
   $("#navAuth").textContent="Sign out";
   const {data,error}=await sb.rpc("d365_status");
@@ -607,7 +638,7 @@ function openPay(plan,why){payPlan=plan||"pro";setPlan(payPlan);$("#payWhy").tex
 function setPlan(p){payPlan=p;$$("#planTabs button").forEach(b=>b.classList.toggle("on",b.dataset.p===p));$("#payTitle").textContent="Start "+(p==="pro"?"Pro":"Basic");$("#payAmt").textContent=p==="pro"?"$14.99":"$9.99"}
 $$("#planTabs button").forEach(b=>b.onclick=()=>setPlan(b.dataset.p));
 $$("#mTabs button").forEach(b=>b.onclick=()=>{payMethod=b.dataset.m;$$("#mTabs button").forEach(z=>z.classList.toggle("on",z===b));$("#refLbl").textContent=payMethod==="cashapp"?"Your $cashtag":"Name on your Zelle account";$("#payRef").placeholder=payMethod==="cashapp"?"$yourcashtag":"First Last"});
-$$("[data-plan]").forEach(b=>b.onclick=()=>needAuth(()=>openPay(b.dataset.plan)));
+$$("[data-plan]").forEach(b=>b.onclick=()=>session?openPay(b.dataset.plan):showJoin(b.dataset.plan));
 $("#payClaim").onclick=async()=>{
   $("#pErr").textContent="";$("#payClaim").disabled=true;
   const {error}=await sb.rpc("d365_pay_claim",{p_method:payMethod,p_ref:$("#payRef").value,p_plan:payPlan});
@@ -620,8 +651,62 @@ async function billing(a){
   const r=await fetch(SB_URL+"/functions/v1/d365-billing",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+session.access_token},body:JSON.stringify({a,plan:payPlan,return_url:location.origin+location.pathname})});
   const j=await r.json();if(j.url)location.href=j.url;else toast(j.error||"Billing unavailable")
 }
-fetch(SB_URL+"/functions/v1/d365-billing",{method:"POST",headers:{"content-type":"application/json"},body:'{"a":"status"}'}).then(r=>r.json()).then(j=>cardOn=!!j.configured).catch(()=>{});
-if(location.hash==="#signup")setTimeout(()=>{if(session)return;open("#mAuth");$$("#mAuth .tabs button")[1].click()},400);
+fetch(SB_URL+"/functions/v1/d365-billing",{method:"POST",headers:{"content-type":"application/json"},body:'{"a":"status"}'}).then(r=>r.json()).then(j=>{cardOn=!!j.configured;if(window.jReady)jRender()}).catch(()=>{});
+
+/* ---------- one-shot join (sign up + plan + pay in one card) ---------- */
+var jPlan="pro", jMethod="cashapp";
+var PRICE={basic:"$9.99",pro:"$14.99"};
+function jRender(){
+  $$("#jPlan button").forEach(b=>b.classList.toggle("on",b.dataset.j===jPlan));
+  $$("#jMethod button").forEach(b=>b.classList.toggle("on",b.dataset.m===jMethod));
+  $("#jCardTab").classList.toggle("hidden",!cardOn);
+  const paid=jPlan!=="free";
+  $("#jPayBox").classList.toggle("hidden",!paid);
+  $("#jRefWrap").classList.toggle("hidden",jMethod==="card");
+  $("#jPayInfo").innerHTML=jMethod==="card"?`Pay <b>${PRICE[jPlan]}/mo</b> by card on the next screen. Cancel any time.`
+    :`Send <b>${PRICE[jPlan]||""}</b> to ${jMethod==="cashapp"?"CashApp <b>$hsw365</b>":"Zelle <b>856-796-8081</b>"} with your email in the note. Access starts right away.`;
+  $("#jRefLbl").textContent=jMethod==="cashapp"?"Your $cashtag":"Name on your Zelle account";
+  $("#jRef").placeholder=jMethod==="cashapp"?"$yourcashtag":"First Last";
+  $("#jGo").textContent=paid?`Create account & unlock ${jPlan==="pro"?"Pro":"Basic"}`:"Create free account";
+}
+$$("#jPlan button").forEach(b=>b.onclick=()=>{jPlan=b.dataset.j;jRender()});
+$$("#jMethod button").forEach(b=>b.onclick=()=>{jMethod=b.dataset.m;jRender()});
+function showJoin(plan){
+  if(session){if(plan&&plan!=="free")openPay(plan);return}
+  if(plan)jPlan=plan;jRender();
+  $("#join").scrollIntoView({behavior:"smooth",block:"center"});
+  setTimeout(()=>$("#jEmail").focus({preventScroll:true}),450);
+}
+$("#jSignIn").onclick=e=>{e.preventDefault();open("#mAuth");$$("#mAuth .tabs button")[0].click()};
+$("#jGo").onclick=async()=>{
+  const email=$("#jEmail").value.trim(),password=$("#jPass").value,ref=$("#jRef").value.trim();$("#jErr").textContent="";
+  if(!/^\S+@\S+\.\S+$/.test(email))return $("#jErr").textContent="Enter a valid email.";
+  if(password.length<8)return $("#jErr").textContent="Password needs 8+ characters.";
+  const paid=jPlan!=="free";
+  if(paid&&jMethod!=="card"&&ref.length<2)return $("#jErr").textContent=jMethod==="cashapp"?"Add your $cashtag so we can match your payment.":"Add the name on your Zelle account.";
+  $("#jGo").disabled=true;
+  try{
+    const r=await fetch(SB_URL+"/functions/v1/d365-signup",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({email,password})});
+    const j=await r.json().catch(()=>({}));
+    if(j.error)throw new Error(j.error);
+    const si=await sb.auth.signInWithPassword({email,password});
+    if(si.error)throw new Error(j.exists?"That email already has an account. Check your password or tap Sign in.":si.error.message);
+    session=si.data.session;
+    if(paid&&jMethod==="card"){payPlan=jPlan;return billing("checkout")}
+    if(paid){
+      await sb.rpc("d365_status");
+      const {error}=await sb.rpc("d365_pay_claim",{p_method:jMethod,p_ref:ref,p_plan:jPlan});
+      if(error&&!/already being confirmed/i.test(error.message))throw new Error(error.message);
+      toast("You're in. "+(jPlan==="pro"?"Pro":"Basic")+" is active.");
+    }else toast("You're in. Upload your report to scan it free.");
+    await refresh();
+    if(afterAuth){const f=afterAuth;afterAuth=null;f()}else $("#app").scrollIntoView({behavior:"smooth"});
+  }catch(e){$("#jErr").textContent=e.message}
+  finally{$("#jGo").disabled=false}
+};
+$$("[data-join]").forEach(a=>a.onclick=e=>{e.preventDefault();showJoin(a.dataset.join)});
+window.jReady=true;jRender();
+if(location.hash==="#signup")setTimeout(()=>showJoin(),700);
 if(location.hash==="#paid")setTimeout(()=>toast("Payment received. Welcome to DISPUTE365."),600);
 
 /* ---------- generate ---------- */
