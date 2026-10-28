@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>DISPUTE365 Letter Builder</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Free credit dispute letter generator. Build FCRA dispute letters for Equifax, Experian and TransUnion in minutes. No signup, nothing stored.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Instrument+Sans:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+/* Layout: certified-mail desk — dark green band header, form on the left, a typed letter on paper on the right, mailing stub + upsell below */
+:root{
+  --paper:#f5f7f4; --card:#ffffff; --ink:#14201a; --muted:#56655c; --line:#d6ded8;
+  --green:#1f6b45; --green-ink:#e9f5ee; --stamp:#c8102e; --sheet:#fffffe; --sheet-ink:#1b1b1b;
+  --field:#ffffff; --band:#0f3b27; --band-ink:#eaf4ee; --chip:#e5efe8;
+  --f-display:"Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --f-body:"Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-type:"Courier Prime", "Courier New", Courier, monospace;
+  --r:6px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0d1411; --card:#141d18; --ink:#e4ece6; --muted:#9db0a4; --line:#26342c;
+  --green:#3fbf7c; --green-ink:#0b2316; --stamp:#ff5a6e; --sheet:#f3f1ea; --sheet-ink:#1b1b1b;
+  --field:#0f1814; --band:#08241a; --band-ink:#d9efe2; --chip:#1b2a22; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0d1411; --card:#141d18; --ink:#e4ece6; --muted:#9db0a4; --line:#26342c;
+  --green:#3fbf7c; --green-ink:#0b2316; --stamp:#ff5a6e; --sheet:#f3f1ea; --sheet-ink:#1b1b1b;
+  --field:#0f1814; --band:#08241a; --band-ink:#d9efe2; --chip:#1b2a22; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+a{color:var(--green)}
+:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+
+/* header band */
+.band{background:var(--band);color:var(--band-ink)}
+.band .wrap{padding-block:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--f-display);font-weight:900;font-size:26px;letter-spacing:.02em;line-height:1}
+.brand span{color:#7fe0a8}
+.band small{font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.8}
+
+.hero{padding-block:36px 20px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end}
+.hero h1{font-family:var(--f-display);font-weight:900;font-size:clamp(40px,7vw,76px);line-height:.92;margin:0;text-transform:uppercase;text-wrap:balance;letter-spacing:.005em}
+.hero h1 em{font-style:normal;color:var(--green)}
+.hero p{max-width:60ch;color:var(--muted);margin:14px 0 0;font-size:17px}
+.stamp{font-family:var(--f-display);font-weight:900;color:var(--stamp);border:3px solid var(--stamp);border-radius:4px;padding:8px 14px;transform:rotate(-6deg);text-align:center;line-height:1;text-transform:uppercase;font-size:22px;opacity:.9}
+.stamp b{display:block;font-size:13px;letter-spacing:.18em;margin-top:4px}
+.trust{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.trust span{background:var(--chip);border-radius:99px;padding:5px 12px;font-size:13px;font-weight:600}
+
+/* builder */
+.builder{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:28px;padding-block:12px 40px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;display:grid;gap:22px;min-width:0}
+fieldset{border:0;margin:0;padding:0;display:grid;gap:12px;min-width:0}
+legend{font-family:var(--f-display);font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;display:flex;gap:10px;align-items:center}
+legend i{font-style:normal;font-family:var(--f-body);font-size:12px;background:var(--green);color:var(--green-ink);width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;font-weight:700}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+label{display:grid;gap:4px;font-size:13px;font-weight:600;color:var(--muted);min-width:0}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:5px;padding:9px 10px;width:100%;min-width:0}
+textarea{min-height:68px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--green);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--green) 25%,transparent)}
+.bureaus{display:flex;flex-wrap:wrap;gap:8px}
+.bureaus label{flex-direction:row;display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:5px;padding:8px 12px;color:var(--ink);cursor:pointer;background:var(--field)}
+.bureaus input{width:auto;accent-color:var(--green)}
+.item{border:1px dashed var(--line);border-radius:5px;padding:12px;display:grid;gap:10px;position:relative}
+.item-head{display:flex;justify-content:space-between;align-items:center;font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.btn{font:inherit;font-weight:700;border-radius:5px;padding:10px 16px;cursor:pointer;border:1px solid var(--green);background:var(--green);color:var(--green-ink)}
+.btn.ghost{background:transparent;color:var(--green)}
+.btn.link{border:0;background:none;color:var(--muted);padding:2px 4px;font-size:12px;text-decoration:underline}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.hint{font-size:12px;color:var(--muted);margin:0}
+
+/* letter */
+.desk{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);display:grid;gap:12px;min-width:0}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{font:inherit;font-size:13px;font-weight:700;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:6px 14px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.sheet{background:var(--sheet);color:var(--sheet-ink);font-family:var(--f-type);font-size:13.5px;line-height:1.6;padding:clamp(20px,4vw,44px);border-radius:2px;box-shadow:0 1px 0 rgba(0,0,0,.05),0 18px 40px -18px rgba(0,0,0,.35);white-space:pre-wrap;word-wrap:break-word;max-height:76vh;overflow:auto;position:relative}
+.sheet::before{content:"";position:absolute;inset:0 auto 0 34px;border-left:1px solid rgba(200,16,46,.18);pointer-events:none}
+.desk-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.toast{font-size:13px;font-weight:600;color:var(--green)}
+
+/* lower */
+.lower{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px;padding-block:8px 40px}
+.stub{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;display:grid;gap:14px;min-width:0}
+.stub h2,.pro h2{font-family:var(--f-display);font-weight:900;text-transform:uppercase;font-size:28px;line-height:1;margin:0}
+.stub ol{margin:0;padding-left:20px;display:grid;gap:8px}
+.clock{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;background:var(--chip);border-radius:5px;padding:14px}
+.clock .num{font-family:var(--f-display);font-weight:900;font-size:56px;line-height:.9;color:var(--green);font-variant-numeric:tabular-nums}
+.clock p{margin:0;font-size:14px}
+.pro{background:var(--band);color:var(--band-ink);border-radius:var(--r);padding:24px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center}
+.pro p{margin:8px 0 14px;opacity:.88;max-width:46ch}
+.pro ul{margin:0 0 16px;padding-left:18px;display:grid;gap:4px;font-size:14px}
+.pro .btn{background:#7fe0a8;border-color:#7fe0a8;color:#08241a;text-decoration:none;display:inline-block}
+.qr{background:#fff;padding:10px;border-radius:6px;display:grid;gap:6px;justify-items:center}
+.qr small{color:#08241a;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.ad{min-height:90px;border:1px dashed var(--line);border-radius:5px;display:grid;place-items:center;color:var(--muted);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.partners{display:grid;gap:10px}
+.partners a{display:block;border:1px solid var(--line);border-radius:5px;padding:12px;text-decoration:none;color:var(--ink)}
+.partners a b{display:block}
+.partners a span{font-size:13px;color:var(--muted)}
+footer{border-top:1px solid var(--line);padding-block:24px 40px;color:var(--muted);font-size:12.5px}
+footer p{max-width:90ch;margin:0 0 8px}
+
+@media (max-width:860px){
+  .builder{grid-template-columns:1fr}
+  .desk{position:static}
+  .hero{grid-template-columns:1fr}
+  .stamp{justify-self:start}
+  .pro{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+
+<header class="band">
+  <div class="wrap">
+    <div class="brand">DISPUTE<span>365</span></div>
+    <small>Free Letter Builder · by HSW365 Media</small>
+  </div>
+</header>
+
+<main>
+  <section class="wrap hero">
+    <div>
+      <h1>Wrong item on your credit report? <em>Dispute it today.</em></h1>
+      <p>Build a Fair Credit Reporting Act dispute letter for Equifax, Experian and TransUnion in about three minutes. Free, no signup, and nothing you type leaves your device.</p>
+      <div class="trust"><span>FCRA §611 language</span><span>All 3 bureau addresses</span><span>30-day response clock</span><span>Private: runs in your browser</span></div>
+    </div>
+    <div class="stamp" aria-hidden="true">Certified<b>Return receipt</b></div>
+  </section>
+
+  <div class="wrap"><div class="ad" data-ad-slot="top" hidden>Advertisement</div></div>
+
+  <section class="wrap builder" aria-label="Letter builder">
+    <form class="panel" id="f" autocomplete="on">
+      <fieldset>
+        <legend><i>1</i>Your info</legend>
+        <p class="hint" id="exampleNote">Filled with an example so you can see how it works. <button type="button" class="btn link" id="clearBtn">Clear and start mine</button></p>
+        <label>Full legal name<input id="name" name="name" autocomplete="name"></label>
+        <label>Street address<input id="addr" name="addr" autocomplete="street-address"></label>
+        <div class="row">
+          <label>City<input id="city" autocomplete="address-level2"></label>
+          <label>State<input id="state" maxlength="2" autocomplete="address-level1"></label>
+          <label>ZIP<input id="zip" inputmode="numeric" maxlength="10" autocomplete="postal-code"></label>
+        </div>
+        <div class="row">
+          <label>Date of birth<input id="dob" type="date"></label>
+          <label>SSN last 4 (optional)<input id="ssn4" inputmode="numeric" maxlength="4" pattern="\d{4}"></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><i>2</i>Send to</legend>
+        <div class="bureaus">
+          <label><input type="checkbox" id="b-eq" value="equifax" checked>Equifax</label>
+          <label><input type="checkbox" id="b-ex" value="experian" checked>Experian</label>
+          <label><input type="checkbox" id="b-tu" value="transunion" checked>TransUnion</label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><i>3</i>Items you're disputing</legend>
+        <div id="items" style="display:grid;gap:12px"></div>
+        <div class="actions"><button type="button" class="btn ghost" id="addItem">+ Add another item</button></div>
+      </fieldset>
+    </form>
+
+    <div class="desk">
+      <div class="desk-bar">
+        <div class="tabs" role="tablist" id="tabs"></div>
+        <div class="actions">
+          <span class="toast" id="toast" aria-live="polite"></span>
+          <button type="button" class="btn" id="copyBtn">Copy letter</button>
+        </div>
+      </div>
+      <div class="sheet" id="sheet" tabindex="0" aria-label="Letter preview"></div>
+      <p class="hint">Paste into Word or Google Docs, print, sign, and mail. One letter per bureau.</p>
+    </div>
+  </section>
+
+  <section class="wrap lower">
+    <div class="stub">
+      <h2>Mail it right</h2>
+      <ol>
+        <li>Print and sign each letter. Keep a copy.</li>
+        <li>Include a copy of your driver's license or state ID and a utility bill or bank statement showing your address.</li>
+        <li>Circle or highlight the disputed items on a copy of your report and include it.</li>
+        <li>Send by USPS Certified Mail with Return Receipt so you can prove the date it was received.</li>
+        <li>Mark the date. The bureau generally has 30 days to investigate (45 if you send more info during the investigation).</li>
+      </ol>
+    </div>
+    <div class="stub">
+      <h2>Your 30-day clock</h2>
+      <label>Date the bureau received it (from your return receipt)<input id="recv" type="date"></label>
+      <div class="clock"><div class="num" id="days">30</div><p id="clockText">Enter the receipt date to see your deadline.</p></div>
+      <p class="hint">No answer by the deadline? Send a follow-up letter and file a complaint at consumerfinance.gov/complaint.</p>
+    </div>
+    <div class="stub partners" id="partners" hidden><h2>Tools that help</h2></div>
+  </section>
+
+  <section class="wrap" style="padding-bottom:40px">
+    <div class="pro">
+      <div>
+        <h2>Let DISPUTE365 do the work</h2>
+        <p>Upload your credit report and DISPUTE365 finds the negative items for you, writes every letter, and tracks each bureau's deadline.</p>
+        <ul><li>Report upload with automatic item detection</li><li>Letters for every round, not just the first</li><li>Deadline reminders so nothing slips</li></ul>
+        <a class="btn" id="proLink" href="#" target="_blank" rel="noopener">Start with DISPUTE365</a>
+      </div>
+      <div class="qr"><div id="qr"></div><small>Scan to sign up</small></div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="ad" data-ad-slot="bottom" hidden>Advertisement</div></div>
+</main>
+
+<footer><div class="wrap">
+  <p>DISPUTE365 is a self-help tool from HSW365 Media LLC. It is not a law firm or a credit repair organization and does not give legal advice. You have the right to dispute inaccurate information with the credit bureaus yourself, for free. Only dispute information you believe is inaccurate or incomplete.</p>
+  <p>Bureau mailing addresses are current as published by each bureau; confirm on the bureau's site before mailing. Everything you type stays in your browser.</p>
+</div></footer>
+
+<script>
+/* ===== CONFIG — edit these to monetize ===== */
+const CONFIG = {
+  SIGNUP_URL: "https://hsw365.github.io/DISPUTE365/#signup", // DISPUTE365 sign-up
+  ADSENSE_CLIENT: "",   // e.g. "ca-pub-1234567890123456" — ad slots stay hidden until set
+  ADSENSE_SLOTS: { top: "", bottom: "" },
+  PARTNERS: [           // affiliate links; section stays hidden while empty
+    // { name:"Credit monitoring", note:"Watch your score after each round", url:"https://..." }
+  ]
+};
+
+const BUREAUS = {
+  equifax:   { name:"Equifax",    addr:"Equifax Information Services LLC\nP.O. Box 740256\nAtlanta, GA 30374-0256" },
+  experian:  { name:"Experian",   addr:"Experian\nP.O. Box 4500\nAllen, TX 75013" },
+  transunion:{ name:"TransUnion", addr:"TransUnion LLC\nConsumer Dispute Center\nP.O. Box 2000\nChester, PA 19016" }
+};
+
+const TYPES = {
+  inaccurate: { label:"Information is inaccurate", line:i=>`The information reported for this account is inaccurate.${i.detail?" "+i.detail:""} Please correct it or delete it.` },
+  notmine:    { label:"Not my account", line:i=>`This account does not belong to me. I never opened it and never authorized anyone to open it in my name. Please delete it.` },
+  late:       { label:"Late payment reported wrong", line:i=>`The late payment(s) reported on this account are inaccurate.${i.detail?" "+i.detail:""} Please correct the payment history.` },
+  balance:    { label:"Wrong balance or status", line:i=>`The balance and/or account status reported is incorrect.${i.detail?" "+i.detail:""} Please correct it.` },
+  duplicate:  { label:"Duplicate listing", line:i=>`This account is reported more than once on my file. Please delete the duplicate entry.` },
+  obsolete:   { label:"Too old to report (7+ years)", line:i=>`This item is older than the reporting period allowed under FCRA §605 (15 U.S.C. §1681c).${i.detail?" "+i.detail:""} Please delete it.` },
+  inquiry:    { label:"Hard inquiry I didn't authorize", line:i=>`I did not authorize this hard inquiry and did not apply for credit with this company. Please delete it.` },
+  idtheft:    { label:"Identity theft", line:i=>`This account is the result of identity theft. Under FCRA §605B (15 U.S.C. §1681c-2), please block this information. My identity theft report is enclosed.` }
+};
+
+const $ = id => document.getElementById(id);
+let items = [];
+let active = "equifax";
+let uid = 0;
+
+const EXAMPLE = {
+  name:"Jordan Reyes", addr:"412 Landis Ave, Apt 3", city:"Vineland", state:"NJ", zip:"08360", dob:"1988-04-12", ssn4:"",
+  items:[
+    { type:"late", creditor:"Capital One", acct:"5178XXXX", detail:"I paid on time in March 2025. My bank statement showing the payment is enclosed." },
+    { type:"inquiry", creditor:"Westlake Financial", acct:"", detail:"" }
+  ]
+};
+
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]))}
+
+function itemHTML(it, n){
+  const opts = Object.entries(TYPES).map(([k,v])=>`<option value="${k}" ${k===it.type?"selected":""}>${v.label}</option>`).join("");
+  return `<div class="item" data-id="${it.id}">
+    <div class="item-head">Item ${n}${items.length>1?`<button type="button" class="btn link" data-remove="${it.id}">Remove</button>`:""}</div>
+    <label>What's wrong<select id="t-${it.id}" data-k="type">${opts}</select></label>
+    <div class="row">
+      <label>Creditor / company<input id="c-${it.id}" data-k="creditor" value="${esc(it.creditor)}"></label>
+      <label>Account # (partial is fine)<input id="a-${it.id}" data-k="acct" value="${esc(it.acct)}"></label>
+    </div>
+    <label>Details (optional)<textarea id="d-${it.id}" data-k="detail" placeholder="What's wrong and what proof you're including">${esc(it.detail)}</textarea></label>
+  </div>`;
+}
+
+function renderItems(){
+  $("items").innerHTML = items.map((it,i)=>itemHTML(it,i+1)).join("");
+}
+
+function v(id){return $(id).value.trim()}
+
+function fmtDate(d){return d.toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})}
+
+function letterFor(key){
+  const b = BUREAUS[key];
+  const name = v("name")||"[Your full name]";
+  const cityLine = [v("city"),v("state")].filter(Boolean).join(", ") + (v("zip")?" "+v("zip"):"");
+  const dob = v("dob") ? fmtDate(new Date(v("dob")+"T12:00:00")) : "[Date of birth]";
+  const idLines = [`Date of birth: ${dob}`];
+  if (v("ssn4")) idLines.push(`SSN (last 4): XXX-XX-${v("ssn4")}`);
+  const list = items.map((it,i)=>{
+    const t = TYPES[it.type];
+    const head = `${i+1}. ${it.creditor||"[Creditor name]"}${it.acct?" — Account #"+it.acct:""}`;
+    return `${head}\n   ${t.line(it)}`;
+  }).join("\n\n");
+  const hasIdTheft = items.some(i=>i.type==="idtheft");
+  const encl = ["Copy of government-issued photo ID","Copy of a utility bill or bank statement showing my address","Copy of my credit report with the disputed items marked"];
+  if (hasIdTheft) encl.push("Copy of my FTC Identity Theft Report");
+  if (items.some(i=>/enclos/i.test(i.detail))) encl.push("Supporting documents referenced above");
+  return `${name}
+${v("addr")||"[Street address]"}
+${cityLine||"[City, State ZIP]"}
+
+${fmtDate(new Date())}
+
+${b.addr}
+
+RE: Request for investigation of disputed information
+${idLines.join("\n")}
+
+To ${b.name}:
+
+I am writing to dispute the following information in my ${b.name} credit file. I have marked these items on the enclosed copy of my report.
+
+${list}
+
+Under the Fair Credit Reporting Act, §611 (15 U.S.C. §1681i), please conduct a reasonable investigation of each item above within 30 days and delete or correct any information that is inaccurate, incomplete or cannot be verified.
+
+When your investigation is complete, please send me written results and an updated copy of my credit report. If any item is verified, please also provide a description of the procedure used to determine its accuracy, including the name, address and phone number of each furnisher you contacted, as required by 15 U.S.C. §1681i(a)(6)-(7).
+
+Sincerely,
+
+
+____________________________
+${name}
+
+Enclosures:
+${encl.map(e=>"- "+e).join("\n")}`;
+}
+
+function selectedBureaus(){
+  return ["equifax","experian","transunion"].filter(k=>$(k==="equifax"?"b-eq":k==="experian"?"b-ex":"b-tu").checked);
+}
+
+function render(){
+  const sel = selectedBureaus();
+  if (!sel.includes(active)) active = sel[0]||null;
+  $("tabs").innerHTML = sel.map(k=>`<button type="button" class="tab" role="tab" aria-selected="${k===active}" data-tab="${k}">${BUREAUS[k].name}</button>`).join("");
+  $("sheet").textContent = active ? letterFor(active) : "Pick at least one bureau to build a letter.";
+  $("copyBtn").disabled = !active;
+  try{ localStorage.setItem("d365-draft", JSON.stringify(snapshot())); }catch(e){}
+}
+
+function snapshot(){
+  return {name:v("name"),addr:v("addr"),city:v("city"),state:v("state"),zip:v("zip"),dob:v("dob"),items};
+}
+
+function load(d){
+  ["name","addr","city","state","zip","dob"].forEach(k=>$(k).value=d[k]||"");
+  $("ssn4").value = "";
+  items = (d.items&&d.items.length?d.items:[{type:"inaccurate",creditor:"",acct:"",detail:""}]).map(i=>({...i,id:++uid}));
+  renderItems(); render();
+}
+
+/* events */
+$("f").addEventListener("input", e=>{
+  const box = e.target.closest(".item");
+  if (box){ const it = items.find(i=>i.id==box.dataset.id); if(it) it[e.target.dataset.k]=e.target.value; }
+  if (e.target.id==="state") e.target.value = e.target.value.toUpperCase();
+  if (e.target.id==="ssn4") e.target.value = e.target.value.replace(/\D/g,"");
+  render();
+});
+$("f").addEventListener("change", e=>{
+  const box = e.target.closest(".item");
+  if (box){ const it = items.find(i=>i.id==box.dataset.id); if(it) it[e.target.dataset.k]=e.target.value; }
+  render();
+});
+$("f").addEventListener("submit", e=>e.preventDefault());
+$("items").addEventListener("click", e=>{
+  const id = e.target.dataset.remove; if(!id) return;
+  items = items.filter(i=>i.id!=id); renderItems(); render();
+});
+$("addItem").addEventListener("click", ()=>{
+  items.push({id:++uid,type:"inaccurate",creditor:"",acct:"",detail:""});
+  renderItems(); render();
+  $("c-"+uid).focus();
+});
+$("clearBtn").addEventListener("click", ()=>{
+  load({items:[]}); $("exampleNote").hidden = true;
+  try{ localStorage.removeItem("d365-draft"); }catch(e){}
+  $("name").focus();
+});
+$("tabs").addEventListener("click", e=>{
+  const k = e.target.dataset.tab; if(!k) return; active = k; render();
+});
+$("copyBtn").addEventListener("click", ()=>{
+  const text = $("sheet").textContent;
+  const done = msg=>{ $("toast").textContent = msg; setTimeout(()=>$("toast").textContent="",2500); };
+  const fallback = ()=>{
+    const r = document.createRange(); r.selectNodeContents($("sheet"));
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    done("Selected. Press Ctrl+C to copy.");
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>done(BUREAUS[active].name+" letter copied"), fallback);
+  } else fallback();
+});
+
+/* 30-day clock */
+$("recv").addEventListener("input", ()=>{
+  const r = $("recv").value;
+  if (!r){ $("days").textContent="30"; $("clockText").textContent="Enter the receipt date to see your deadline."; return; }
+  const start = new Date(r+"T12:00:00");
+  const due = new Date(start); due.setDate(due.getDate()+30);
+  const today = new Date(); today.setHours(12,0,0,0);
+  const left = Math.round((due-today)/86400000);
+  $("days").textContent = Math.max(left,0);
+  $("clockText").innerHTML = left>0
+    ? `days left. Results are due by <b>${fmtDate(due)}</b>.`
+    : `Deadline passed on <b>${fmtDate(due)}</b>. If you have no answer, send a follow-up and file a CFPB complaint.`;
+});
+
+/* monetization wiring */
+(function(){
+  $("proLink").href = CONFIG.SIGNUP_URL;
+  try{ new QRCode($("qr"), { text: CONFIG.SIGNUP_URL, width: 132, height: 132, colorDark:"#08241a", colorLight:"#ffffff" }); }catch(e){}
+  if (CONFIG.ADSENSE_CLIENT){
+    const s = document.createElement("script");
+    s.async = true; s.crossOrigin = "anonymous";
+    s.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client="+CONFIG.ADSENSE_CLIENT;
+    document.head.appendChild(s);
+    document.querySelectorAll("[data-ad-slot]").forEach(el=>{
+      const slot = CONFIG.ADSENSE_SLOTS[el.dataset.adSlot]; if(!slot) return;
+      el.hidden = false; el.textContent = "";
+      el.innerHTML = `<ins class="adsbygoogle" style="display:block;width:100%" data-ad-client="${CONFIG.ADSENSE_CLIENT}" data-ad-slot="${slot}" data-ad-format="auto" data-full-width-responsive="true"></ins>`;
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    });
+  }
+  if (CONFIG.PARTNERS.length){
+    const box = $("partners"); box.hidden = false;
+    CONFIG.PARTNERS.forEach(p=>{
+      const a = document.createElement("a"); a.href=p.url; a.target="_blank"; a.rel="sponsored noopener";
+      a.innerHTML = `<b>${esc(p.name)}</b><span>${esc(p.note||"")}</span>`; box.appendChild(a);
+    });
+  }
+})();
+
+/* boot */
+(function(){
+  let saved = null;
+  try{ saved = JSON.parse(localStorage.getItem("d365-draft")||"null"); }catch(e){}
+  if (saved && saved.name && saved.name!==EXAMPLE.name){ load(saved); $("exampleNote").hidden = true; }
+  else load(EXAMPLE);
+})();
+</script>
+
+</body>
+</html>

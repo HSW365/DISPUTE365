@@ -621,6 +621,7 @@ async function billing(a){
   const j=await r.json();if(j.url)location.href=j.url;else toast(j.error||"Billing unavailable")
 }
 fetch(SB_URL+"/functions/v1/d365-billing",{method:"POST",headers:{"content-type":"application/json"},body:'{"a":"status"}'}).then(r=>r.json()).then(j=>cardOn=!!j.configured).catch(()=>{});
+if(location.hash==="#signup")setTimeout(()=>{if(session)return;open("#mAuth");$$("#mAuth .tabs button")[1].click()},400);
 if(location.hash==="#paid")setTimeout(()=>toast("Payment received. Welcome to DISPUTE365."),600);
 
 /* ---------- generate ---------- */
