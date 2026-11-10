@@ -13,6 +13,7 @@ const BUREAUS: Record<string, string[]> = {
   transunion: ["TransUnion Consumer Solutions", "P.O. Box 2000", "Chester, PA 19016-2000"],
   equifax: ["Equifax Information Services LLC", "P.O. Box 740256", "Atlanta, GA 30374-0256"],
 };
+const OWNER_EMAILS = ["hsw365media@gmail.com", "hoodstarent365@gmail.com"];
 const BASIC = ["bureau", "obsolete", "inquiry"];
 const PRO = ["furnisher", "validation", "goodwill", "paydelete", "mov", "cfpb"];
 
@@ -109,9 +110,10 @@ Deno.serve(async (req) => {
     const user = auth?.user;
     if (!user) return json({ error: "Sign in to generate letters." }, 401);
     const { data: m } = await db.from("d365_members").select("plan, paid_until, comp").eq("id", user.id).maybeSingle();
-    const active = !!m && (m.comp || (m.paid_until && new Date(m.paid_until).getTime() > Date.now()));
+    const owner = OWNER_EMAILS.includes(String(user.email ?? "").toLowerCase());
+    const active = owner || (!!m && (m.comp || (m.paid_until && new Date(m.paid_until).getTime() > Date.now())));
     if (!active) return json({ error: "subscribe" }, 402);
-    const plan = m!.comp ? "pro" : m!.plan;
+    const plan = owner || m?.comp ? "pro" : m!.plan;
 
     const b = await req.json().catch(() => ({}));
     const raw: P = b.profile ?? {};
