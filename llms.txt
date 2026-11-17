@@ -1,0 +1,9 @@
+# DISPUTE365
+
+> Credit report dispute app: find errors and send dispute letters yourself.
+
+Built by HSW365 Media LLC (Elvin Torres Sr., Hoodstar365).
+
+## Pages
+- https://hsw365.github.io/DISPUTE365/
+- https://hsw365.github.io/DISPUTE365/letter/
