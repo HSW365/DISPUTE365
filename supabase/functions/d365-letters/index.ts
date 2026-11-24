@@ -5,7 +5,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 // POST {profile, items:[{letter, creditor, mask, bureau, reason, address, amount, dofd, balance, notes}]}
 // Nothing sent here is stored.
 const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
-const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
+const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-hsw-owner", "Access-Control-Allow-Methods": "POST, OPTIONS" };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 
 const BUREAUS: Record<string, string[]> = {
@@ -14,6 +14,23 @@ const BUREAUS: Record<string, string[]> = {
   equifax: ["Equifax Information Services LLC", "P.O. Box 740256", "Atlanta, GA 30374-0256"],
 };
 const OWNER_EMAILS = ["hsw365media@gmail.com", "hoodstarent365@gmail.com"];
+
+// HSW365 owner PIN login: the browser sends the signed owner token in X-HSW-Owner. It is re-checked with the
+// owner-pin service (never trusted as-is); a valid token is the owner with every letter, no plan needed.
+const OWNER_PIN_URL = "https://lsxdlmrjrcivxwgfkpop.supabase.co/functions/v1/owner-pin";
+const ownerOk = new Map<string, number>(); // token -> cache expiry (ms), positive results only
+async function ownerToken(req: Request) {
+  const t = (req.headers.get("x-hsw-owner") ?? "").trim();
+  if (!t || t.length > 512) return false;
+  const now = Date.now();
+  if ((ownerOk.get(t) ?? 0) > now) return true;
+  try {
+    const r = await fetch(OWNER_PIN_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ a: "verify", token: t }), signal: AbortSignal.timeout(6000) });
+    const d = await r.json().catch(() => null);
+    if (d && d.ok === true) { if (ownerOk.size > 200) ownerOk.clear(); ownerOk.set(t, now + 5 * 60 * 1000); return true; }
+  } catch { /* owner-pin unreachable: not verified */ }
+  return false;
+}
 const BASIC = ["bureau", "obsolete", "inquiry"];
 const PRO = ["furnisher", "validation", "goodwill", "paydelete", "mov", "cfpb"];
 
@@ -105,12 +122,16 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
   try {
-    const token = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
-    const { data: auth } = await db.auth.getUser(token);
-    const user = auth?.user;
-    if (!user) return json({ error: "Sign in to generate letters." }, 401);
-    const { data: m } = await db.from("d365_members").select("plan, paid_until, comp").eq("id", user.id).maybeSingle();
-    const owner = OWNER_EMAILS.includes(String(user.email ?? "").toLowerCase());
+    const pinOwner = await ownerToken(req);
+    let owner = pinOwner, m: { plan: string; paid_until: string | null; comp: boolean } | null = null;
+    if (!pinOwner) {
+      const token = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+      const { data: auth } = await db.auth.getUser(token);
+      const user = auth?.user;
+      if (!user) return json({ error: "Sign in to generate letters." }, 401);
+      ({ data: m } = await db.from("d365_members").select("plan, paid_until, comp").eq("id", user.id).maybeSingle());
+      owner = OWNER_EMAILS.includes(String(user.email ?? "").toLowerCase());
+    }
     const active = owner || (!!m && (m.comp || (m.paid_until && new Date(m.paid_until).getTime() > Date.now())));
     if (!active) return json({ error: "subscribe" }, 402);
     const plan = owner || m?.comp ? "pro" : m!.plan;
@@ -121,7 +142,7 @@ Deno.serve(async (req) => {
     for (const k of ["name", "addr1", "addr2", "city", "state", "zip", "phone", "email", "dob"]) p[k] = s(raw[k], 120);
     p.ssn4 = String(raw.ssn4 ?? "").replace(/\D/g, "").slice(-4);
     if (!p.name || !p.addr1 || !p.city || !p.state || !p.zip) return json({ error: "Add your full name and mailing address first." }, 400);
-    const items: I[] = Array.isArray(b.items) ? b.items.slice(0, 60) : [];
+    const items: I[] = Array.isArray(b.items) ? b.items.slice(0, owner ? 500 : 60) : [];
     if (!items.length) return json({ error: "Select at least one item." }, 400);
 
     const letters = [];
@@ -137,6 +158,6 @@ Deno.serve(async (req) => {
       letters.push({ title: L.title, letter: i.letter, bureau: i.bureau, creditor: i.creditor, mask: i.mask,
         text: `${head}\n\nTo whom it may concern,\n\n${L.body}\n\n${L.enc.length ? close(p, L.enc) : `Sincerely,\n\n\n${p.name}`}` });
     }
-    return json({ plan, letters });
+    return json({ plan, owner, letters });
   } catch (e) { return json({ error: (e as Error).message }, 400); }
 });

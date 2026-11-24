@@ -189,6 +189,9 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 .acct{font:12px "Space Mono";color:var(--mut)}
 .pill{font:700 10px "Space Mono";letter-spacing:.1em;padding:5px 8px;border-radius:4px;border:1px solid var(--line2);text-transform:uppercase}
 .pill.on{color:var(--gn);border-color:rgba(52,211,153,.4)}
+.pill.vip{color:#fff;background:linear-gradient(90deg,rgba(52,211,153,.25),rgba(52,211,153,.08));border-color:rgba(52,211,153,.55)}
+html.hsw-owner #join{display:none!important}
+html:not(.hsw-owner) [data-hsw-vip]{display:none!important}
 .spin{width:16px;height:16px;border:2px solid rgba(0,0,0,.25);border-top-color:#04141a;border-radius:50%;animation:r .7s linear infinite}
 @keyframes r{to{transform:rotate(360deg)}}
 .hidden{display:none!important}
@@ -228,7 +231,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
       <p class="lede">Upload your Experian, TransUnion or Equifax report. DISPUTE365 pulls out every collection, charge-off, late payment, obsolete item and hard inquiry, then writes the dispute letters that cite the law. You mail them. You keep control.</p>
       <div class="hcta">
         <a href="#app" class="btn btn-p">Scan my report free</a>
-        <a href="#join" class="btn btn-g" data-join="pro">Plans from $9.99/mo</a>
+        <a href="#join" class="btn btn-g" data-join="pro" data-hsw-paywall>Plans from $9.99/mo</a>
       </div>
       <div class="trust"><span>Report never leaves your device</span><span>FCRA + FDCPA cited</span><span>Cancel anytime</span></div>
     </div>
@@ -352,7 +355,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
         <li class="x">Furnisher, validation, goodwill &amp; pay-for-delete</li>
         <li class="x">Round tracker</li>
       </ul>
-      <button class="btn btn-g" style="width:100%" data-plan="basic">Start Basic</button>
+      <button class="btn btn-g" style="width:100%" data-plan="basic" data-hsw-paywall>Start Basic</button>
     </div>
     <div class="plan f"><span class="badge">MOST LETTERS</span>
       <h3>Pro</h3>
@@ -366,7 +369,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
         <li>Method-of-verification round 2 letters</li>
         <li>CFPB complaint drafts + 30-day round tracker</li>
       </ul>
-      <button class="btn btn-p" style="width:100%" data-plan="pro">Start Pro</button>
+      <button class="btn btn-p" style="width:100%" data-plan="pro" data-hsw-paywall>Start Pro</button><div class="pill vip" data-hsw-vip style="text-align:center;padding:12px">VIP · Owner: both plans are yours free</div>
     </div>
   </div>
   <p class="cmp">Comparable DIY dispute software runs $24.95 to $49 a month.</p>
@@ -623,15 +626,20 @@ $("#aGo").onclick=async()=>{
 $("#aReset").onclick=async()=>{const email=$("#aEmail").value.trim();if(!email)return $("#aErr").textContent="Enter your email first.";const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});$("#aErr").innerHTML=error?esc(error.message):'<span class="ok">Reset link sent.</span>'};
 async function signOut(){await sb.auth.signOut();toast("Signed out")}
 let afterAuth=null;
-const needAuth=fn=>{if(session)return fn();afterAuth=fn;showJoin()};
+const needAuth=fn=>{if(session||isOwner())return fn();afterAuth=fn;showJoin()};
 sb.auth.onAuthStateChange((_e,s)=>{session=s;refresh()});
 
+const isOwner=()=>!!window.HSW_OWNER;
+const ownerMember=()=>({...(member||{}),active:true,plan:"pro",owner:true,card_billing:false});
+const VIP_PILL='<span class="pill vip" title="Owner VIP all access">VIP · Owner</span>';
 async function refresh(){
-  $("#join").classList.toggle("hidden",!!session);$("#heroScan").classList.toggle("hidden",!session);
-  if(!session){member=null;$("#navAuth").textContent="Sign in";$("#navAcct").innerHTML="";renderItems();renderTracker();return}
+  const signedIn=!!session||isOwner();
+  $("#join").classList.toggle("hidden",signedIn);$("#heroScan").classList.toggle("hidden",!signedIn);
+  if(!session){member=isOwner()?ownerMember():null;$("#navAuth").textContent="Sign in";$("#navAcct").innerHTML=isOwner()?VIP_PILL:"";renderItems();renderTracker();return}
   $("#navAuth").textContent="Sign out";
   const {data,error}=await sb.rpc("d365_status");
   member=error?null:data;
+  if(isOwner()){member=ownerMember();$("#navAcct").innerHTML=VIP_PILL;renderItems();renderTracker();return}
   $("#navAcct").innerHTML=member?`<span class="pill ${member.active?"on":""}">${member.active?member.plan:"No plan"}</span>`+(member.card_billing?` <a href="#" id="bill" class="acct">Billing</a>`:""):"";
   $("#bill")&&($("#bill").onclick=e=>{e.preventDefault();billing("portal")});
   renderItems();renderTracker();
@@ -639,7 +647,7 @@ async function refresh(){
 
 /* ---------- payments ---------- */
 let payPlan="pro",payMethod="cashapp";
-function openPay(plan,why){payPlan=plan||"pro";setPlan(payPlan);$("#payWhy").textContent=why||"Pick a plan and how you want to pay.";$("#pErr").textContent="";$("#payCard").classList.toggle("hidden",!cardOn);open("#mPay")}
+function openPay(plan,why){if(isOwner())return toast("VIP all access is on. Every plan is free for you.");payPlan=plan||"pro";setPlan(payPlan);$("#payWhy").textContent=why||"Pick a plan and how you want to pay.";$("#pErr").textContent="";$("#payCard").classList.toggle("hidden",!cardOn);open("#mPay")}
 function setPlan(p){payPlan=p;$$("#planTabs button").forEach(b=>b.classList.toggle("on",b.dataset.p===p));$("#payTitle").textContent="Start "+(p==="pro"?"Pro":"Basic");$("#payAmt").textContent=p==="pro"?"$14.99":"$9.99"}
 $$("#planTabs button").forEach(b=>b.onclick=()=>setPlan(b.dataset.p));
 $$("#mTabs button").forEach(b=>b.onclick=()=>{payMethod=b.dataset.m;$$("#mTabs button").forEach(z=>z.classList.toggle("on",z===b));$("#refLbl").textContent=payMethod==="cashapp"?"Your $cashtag":"Name on your Zelle account";$("#payRef").placeholder=payMethod==="cashapp"?"$yourcashtag":"First Last"});
@@ -677,6 +685,7 @@ function jRender(){
 $$("#jPlan button").forEach(b=>b.onclick=()=>{jPlan=b.dataset.j;jRender()});
 $$("#jMethod button").forEach(b=>b.onclick=()=>{jMethod=b.dataset.m;jRender()});
 function showJoin(plan){
+  if(isOwner())return toast("VIP all access is on. Every plan is free for you.");
   if(session){if(plan&&plan!=="free")openPay(plan);return}
   if(plan)jPlan=plan;jRender();
   $("#join").scrollIntoView({behavior:"smooth",block:"center"});
@@ -724,7 +733,9 @@ async function generate(){
   if(member.plan!=="pro"&&list.some(x=>LETTERS.find(l=>l[0]===x.letter)[2]))return openPay("pro","Some of your letters are Pro letters. Upgrade to unlock them.");
   const btn=$("#gen");btn.disabled=true;btn.innerHTML='<span class="spin"></span> Writing';
   try{
-    const r=await fetch(SB_URL+"/functions/v1/d365-letters",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+session.access_token},body:JSON.stringify({profile:p,items:list.map(x=>({letter:x.letter,creditor:x.creditor,mask:x.mask,bureau:x.bureau,reason:x.reason,address:x.address,amount:x.amount,dofd:x.dofd,balance:x.balance,notes:x.notes}))})});
+    const hdr={"content-type":"application/json",authorization:"Bearer "+(session?session.access_token:SB_KEY)};
+    if(isOwner()&&window.HSW_OWNER_TOKEN)hdr["x-hsw-owner"]=window.HSW_OWNER_TOKEN;
+    const r=await fetch(SB_URL+"/functions/v1/d365-letters",{method:"POST",headers:hdr,body:JSON.stringify({profile:p,items:list.map(x=>({letter:x.letter,creditor:x.creditor,mask:x.mask,bureau:x.bureau,reason:x.reason,address:x.address,amount:x.amount,dofd:x.dofd,balance:x.balance,notes:x.notes}))})});
     const j=await r.json();
     if(r.status===402)return openPay(j.error==="pro"?"pro":"basic","Pick a plan to unlock your letters.");
     if(!r.ok)return toast(j.error||"Could not write letters");
@@ -747,17 +758,30 @@ function renderLetters(){
 function copy(t){navigator.clipboard.writeText(t).then(()=>toast("Copied"),()=>toast("Copy failed — select the text manually"))}
 
 /* ---------- tracker ---------- */
+// Owner signed in with the PIN only (no account session): rounds are kept on this device.
+const OWNER_ROUNDS="d365_owner_rounds";
+const ownerLocal=()=>isOwner()&&!session;
+const dayStr=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const newId=()=>"o"+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 async function logRounds(ls,btn){
   const rows=ls.map(l=>({creditor:l.creditor,account_mask:l.mask||null,bureau:l.bureau||"creditor",letter_type:l.letter}));
+  if(ownerLocal()){
+    const now=new Date(),all=store.get(OWNER_ROUNDS,[]);
+    rows.forEach(r=>all.push({...r,id:newId(),round_no:1,status:"sent",sent_on:dayStr(now),due_on:dayStr(new Date(now.getTime()+30*864e5)),created_at:now.toISOString()}));
+    store.set(OWNER_ROUNDS,all);
+    if(btn){btn.disabled=true;btn.textContent="Logged"}toast("Added to tracker");return renderTracker();
+  }
   const {error}=await sb.from("d365_rounds").insert(rows);
   if(error)return toast(error.message);
   if(btn){btn.disabled=true;btn.textContent="Logged"}toast("Added to tracker");renderTracker();
 }
 async function renderTracker(){
   const el=$("#trk");
-  if(!session)return el.innerHTML='<div class="empty">Sign in with a Pro plan to track your dispute rounds.</div>';
+  if(!session&&!isOwner())return el.innerHTML='<div class="empty">Sign in with a Pro plan to track your dispute rounds.</div>';
   if(!(member?.active&&member.plan==="pro"))return el.innerHTML='<div class="empty">The round tracker is part of Pro. <a href="#plans">See plans</a></div>';
-  const {data,error}=await sb.from("d365_rounds").select("*").order("sent_on",{ascending:false}).limit(300);
+  const local=ownerLocal();
+  const byDate=(a,b)=>a.sent_on<b.sent_on?1:a.sent_on>b.sent_on?-1:0;
+  const {data,error}=local?{data:store.get(OWNER_ROUNDS,[]).slice().sort(byDate),error:null}:await sb.from("d365_rounds").select("*").order("sent_on",{ascending:false}).limit(300);
   if(error)return el.innerHTML='<div class="empty">Could not load your rounds.</div>';
   if(!data.length)return el.innerHTML='<div class="empty">No rounds yet. Generate letters and press "Log mailed".</div>';
   const open=data.filter(r=>r.status==="sent").length,del=data.filter(r=>r.status==="deleted").length;
@@ -768,11 +792,12 @@ async function renderTracker(){
     return `<tr><td><b>${esc(r.creditor)}</b><div class="acct">${esc(r.account_mask||"")}</div></td><td>${esc(r.bureau.toUpperCase())}</td><td class="acct">${esc((LETTERS.find(l=>l[0]===r.letter_type)||[,r.letter_type])[1])}</td><td class="due">${esc(r.sent_on)}</td><td class="due ${cls}">${r.status==="sent"?(left<0?Math.abs(left)+"d overdue":left+"d left"):esc(r.due_on)}</td>
     <td><select data-rid="${r.id}">${["sent","deleted","updated","verified","no_response"].map(s=>`<option value="${s}" ${r.status===s?"selected":""}>${({sent:"Waiting",deleted:"Deleted",updated:"Corrected",verified:"Verified — send round 2",no_response:"No response"})[s]}</option>`).join("")}</select></td></tr>`}).join("")}</tbody></table></div>
   <p class="note">Verified? Send a Method of Verification letter. No response after 30 days? The bureau must delete the item — send a follow-up and file a CFPB complaint.</p>`;
-  $$("[data-rid]").forEach(s=>s.onchange=async()=>{const {error}=await sb.from("d365_rounds").update({status:s.value}).eq("id",s.dataset.rid);toast(error?error.message:"Updated");renderTracker()});
+  $$("[data-rid]").forEach(s=>s.onchange=async()=>{if(local){const all=store.get(OWNER_ROUNDS,[]),row=all.find(x=>x.id===s.dataset.rid);if(row)row.status=s.value;store.set(OWNER_ROUNDS,all);toast("Updated");return renderTracker()}const {error}=await sb.from("d365_rounds").update({status:s.value}).eq("id",s.dataset.rid);toast(error?error.message:"Updated");renderTracker()});
 }
 sb.auth.getSession().then(({data})=>{session=data.session;refresh()});
+window.addEventListener("hsw-owner",()=>refresh());
 </script>
 <script src="https://calltwin.onrender.com/owner-signin.js" defer></script>
-<script src="owner-login.js" defer></script>
+<script src="owner-login.js?v=3" defer></script>
 </body>
 </html>
